@@ -1,6 +1,6 @@
 # Prelegal Frontend
 
-Prototype Next.js app for PREL-3: a Mutual NDA creator. Users fill in key business terms, preview the generated MNDA (Common Paper v1.0), and download it as Markdown.
+Prototype Next.js app for PREL-3: a Mutual NDA creator. Users fill in key business terms, preview the generated MNDA (Common Paper v1.0), and download it as a PDF (generated client-side via `@react-pdf/renderer`).
 
 ## Getting started
 

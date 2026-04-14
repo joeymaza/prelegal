@@ -14,17 +14,25 @@ export default function Home() {
   const update = <K extends keyof NdaFormData>(key: K, value: NdaFormData[K]) =>
     setData((d) => ({ ...d, [key]: value }));
 
-  const download = () => {
-    const blob = new Blob([rendered], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const safe = (s: string) => s.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "party";
-    a.href = url;
-    a.download = `Mutual-NDA-${safe(data.party1Name)}-${safe(data.party2Name)}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const [downloading, setDownloading] = useState(false);
+
+  const download = async () => {
+    setDownloading(true);
+    try {
+      const { buildNdaPdfBlob } = await import("./nda-pdf");
+      const blob = await buildNdaPdfBlob(data);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const safe = (s: string) => s.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "party";
+      a.href = url;
+      a.download = `Mutual-NDA-${safe(data.party1Name)}-${safe(data.party2Name)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -125,9 +133,10 @@ export default function Home() {
             <button
               type="button"
               onClick={download}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              disabled={downloading}
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Download as Markdown
+              {downloading ? "Generating PDF…" : "Download as PDF"}
             </button>
             <button
               type="button"
