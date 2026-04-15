@@ -65,13 +65,15 @@ function NdaDocument({ data }: { data: NdaFormData }) {
             <Text style={styles.cellHeader}>{p1}</Text>
             <Text style={[styles.cellHeader, { borderRightWidth: 0 }]}>{p2}</Text>
           </View>
-          {SIGNATURE_ROWS.map((label, i) => {
+          {SIGNATURE_ROWS.map((row, i) => {
             const isLast = i === SIGNATURE_ROWS.length - 1;
+            const v1 = row.value(data.party1Signature);
+            const v2 = row.value(data.party2Signature);
             return (
-              <View key={label} style={isLast ? styles.rowLast : styles.row}>
-                <Text style={styles.cell}>{label}</Text>
-                <Text style={styles.cell}> </Text>
-                <Text style={styles.cellLast}> </Text>
+              <View key={row.label} style={isLast ? styles.rowLast : styles.row}>
+                <Text style={styles.cell}>{row.label}</Text>
+                <Text style={styles.cell}>{v1 || " "}</Text>
+                <Text style={styles.cellLast}>{v2 || " "}</Text>
               </View>
             );
           })}

@@ -42,6 +42,40 @@ describe("renderNda — structure", () => {
   it("includes the CC BY 4.0 attribution footer", () => {
     expect(renderNda(base())).toMatch(/CC BY 4\.0/);
   });
+
+  it("fills signature table cells with per-party values", () => {
+    const out = renderNda(
+      base({
+        party1Signature: {
+          printName: "Jane Doe",
+          title: "CEO",
+          company: "Acme, Inc.",
+          noticeAddress: "123 Main St",
+          signedDate: "2026-05-01",
+        },
+        party2Signature: {
+          printName: "John Roe",
+          title: "CTO",
+          company: "Widgets LLC",
+          noticeAddress: "456 Oak Ave",
+          signedDate: "2026-05-02",
+        },
+      }),
+    );
+    expect(out).toContain("| Print Name | Jane Doe | John Roe |");
+    expect(out).toContain("| Title | CEO | CTO |");
+    expect(out).toContain("| Company | Acme, Inc. | Widgets LLC |");
+    expect(out).toContain("| Notice Address | 123 Main St | 456 Oak Ave |");
+    expect(out).toContain("| Date | May 1, 2026 | May 2, 2026 |");
+    // Signature row stays blank for ink.
+    expect(out).toContain("| Signature |  |  |");
+  });
+
+  it("leaves signature cells blank when fields are empty", () => {
+    const out = renderNda(base());
+    expect(out).toContain("| Print Name |  |  |");
+    expect(out).toContain("| Date |  |  |");
+  });
 });
 
 describe("renderNda — placeholders for missing values", () => {

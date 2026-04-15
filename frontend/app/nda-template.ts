@@ -1,5 +1,13 @@
 export type NdaTermMode = "expires" | "perpetual";
 
+export type NdaSignature = {
+  printName: string;
+  title: string;
+  company: string;
+  noticeAddress: string;
+  signedDate: string;
+};
+
 export type NdaFormData = {
   party1Name: string;
   party2Name: string;
@@ -12,7 +20,17 @@ export type NdaFormData = {
   governingLawState: string;
   jurisdiction: string;
   modifications: string;
+  party1Signature: NdaSignature;
+  party2Signature: NdaSignature;
 };
+
+const emptySignature = (): NdaSignature => ({
+  printName: "",
+  title: "",
+  company: "",
+  noticeAddress: "",
+  signedDate: "",
+});
 
 export const makeDefaultFormData = (): NdaFormData => ({
   party1Name: "",
@@ -26,6 +44,8 @@ export const makeDefaultFormData = (): NdaFormData => ({
   governingLawState: "",
   jurisdiction: "",
   modifications: "None.",
+  party1Signature: emptySignature(),
+  party2Signature: emptySignature(),
 });
 
 export const defaultFormData: NdaFormData = makeDefaultFormData();
@@ -72,14 +92,19 @@ export function deriveNdaFields(data: NdaFormData): NdaDerived {
 
 export type NdaClause = { title: string; body: (d: NdaDerived) => string };
 
-export const SIGNATURE_ROWS = [
-  "Signature",
-  "Print Name",
-  "Title",
-  "Company",
-  "Notice Address",
-  "Date",
-] as const;
+export type SignatureRow = {
+  label: string;
+  value: (s: NdaSignature) => string;
+};
+
+export const SIGNATURE_ROWS: SignatureRow[] = [
+  { label: "Signature", value: () => "" },
+  { label: "Print Name", value: (s) => s.printName.trim() },
+  { label: "Title", value: (s) => s.title.trim() },
+  { label: "Company", value: (s) => s.company.trim() },
+  { label: "Notice Address", value: (s) => s.noticeAddress.trim() },
+  { label: "Date", value: (s) => (s.signedDate ? formatDate(s.signedDate) : "") },
+];
 
 export const STANDARD_CLAUSES: NdaClause[] = [
   {
@@ -148,7 +173,9 @@ export function ndaFilename(data: NdaFormData, ext: "pdf" | "md"): string {
 export function renderNda(data: NdaFormData): string {
   const derived = deriveNdaFields(data);
   const { p1, p2, law, jur, purpose, effective, mndaTerm, confTerm, modifications } = derived;
-  const signatureRows = SIGNATURE_ROWS.map((label) => `| ${label} | | |`).join("\n");
+  const signatureRows = SIGNATURE_ROWS.map(
+    (row) => `| ${row.label} | ${row.value(data.party1Signature)} | ${row.value(data.party2Signature)} |`,
+  ).join("\n");
   const clauses = STANDARD_CLAUSES.map((c, i) => `${i + 1}. **${c.title}** ${c.body(derived)}`).join("\n\n");
 
   return `# Mutual Non-Disclosure Agreement

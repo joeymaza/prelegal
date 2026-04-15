@@ -175,6 +175,19 @@ describe("<Home /> — validation + UX", () => {
     expect(screen.getByText(/fields? pending/i)).toBeInTheDocument();
   });
 
+  it("types a signature Print Name into the preview table", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    const p1Sig = screen.getByRole("group", { name: /^Party 1$/i });
+    await user.type(within(p1Sig).getByLabelText(/Print Name/i), "Jane Doe");
+    await user.type(within(p1Sig).getByLabelText(/^Title$/i), "CEO");
+
+    const preview = getPreview();
+    expect(preview.textContent).toContain("Jane Doe");
+    expect(preview.textContent).toContain("CEO");
+  });
+
   it("triggers download on Cmd/Ctrl+Enter", async () => {
     const { buildNdaPdfBlob } = await import("../app/nda-pdf");
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});

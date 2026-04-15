@@ -48,15 +48,16 @@ export function NdaPreview({ data }: { data: NdaFormData }) {
               </tr>
             </thead>
             <tbody>
-              {SIGNATURE_ROWS.map((label, i) => {
+              {SIGNATURE_ROWS.map((row, i) => {
                 const last = i === SIGNATURE_ROWS.length - 1;
+                const v1 = row.value(data.party1Signature);
+                const v2 = row.value(data.party2Signature);
+                const borderB = last ? "" : "border-b border-slate-200";
                 return (
-                  <tr key={label}>
-                    <td className={`border-r border-slate-200 px-3 py-2 text-slate-600 ${last ? "" : "border-b"}`}>
-                      {label}
-                    </td>
-                    <td className={`border-r border-slate-200 px-3 py-2 ${last ? "" : "border-b"}`}>&nbsp;</td>
-                    <td className={`px-3 py-2 ${last ? "" : "border-b border-slate-200"}`}>&nbsp;</td>
+                  <tr key={row.label}>
+                    <td className={`border-r border-slate-200 px-3 py-2 text-slate-600 ${borderB}`}>{row.label}</td>
+                    <td className={`border-r border-slate-200 px-3 py-2 ${borderB}`}>{v1 || "\u00A0"}</td>
+                    <td className={`px-3 py-2 ${borderB}`}>{v2 || "\u00A0"}</td>
                   </tr>
                 );
               })}
