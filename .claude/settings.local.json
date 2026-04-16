@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sSL -o Mutual-NDA.md https://raw.githubusercontent.com/CommonPaper/Mutual-NDA/main/Mutual-NDA.md)",
+      "Bash(curl -sSL -o Mutual-NDA-coverpage.md https://raw.githubusercontent.com/CommonPaper/Mutual-NDA/main/Mutual-NDA-coverpage.md)",
+      "Bash(curl -sSL -o CSA.md https://raw.githubusercontent.com/CommonPaper/CSA/main/CSA.md)",
+      "Bash(curl -sSL -o design-partner-agreement.md https://raw.githubusercontent.com/CommonPaper/Design-Partner-Agreement/main/design-partner-agreement.md)",
+      "Bash(curl -sSL -o sla.md https://raw.githubusercontent.com/CommonPaper/SLA/main/sla.md)",
+      "mcp__atlassian__getAccessibleAtlassianResources",
+      "mcp__atlassian__getJiraIssue",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs -r kill)",
+      "Read(//c/Users/joema/ai_projects/ai_coder/**)",
+      "Bash(gh pr *)",
+      "Bash(git -C C:/Users/joema/ai_projects/ai_coder/prelegal remote -v)",
+      "mcp__github__list_pull_requests",
+      "mcp__github__create_pull_request"
+    ]
+  }
+}
