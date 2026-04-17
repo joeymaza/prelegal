@@ -11,6 +11,7 @@ vi.mock("../app/nda-pdf", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.setItem("prelegal_user", "test@test.com");
   if (!("createObjectURL" in URL)) {
     (URL as unknown as { createObjectURL: (b: Blob) => string }).createObjectURL = () => "blob:mock";
   }

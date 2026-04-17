@@ -46,8 +46,18 @@ export default function Home() {
   const [downloading, setDownloading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const stored = localStorage.getItem("prelegal_user");
+    if (!stored) {
+      window.location.href = "/login/";
+      return;
+    }
+    setUser(stored);
+    setReady(true);
+
     const params = new URLSearchParams(window.location.search);
     const encoded = params.get("d");
     if (encoded) {
@@ -119,6 +129,13 @@ export default function Home() {
 
   const showError = (key: keyof NdaFormData) => touched && errors[key];
 
+  const logout = () => {
+    localStorage.removeItem("prelegal_user");
+    window.location.href = "/login/";
+  };
+
+  if (!ready) return null;
+
   return (
     <main className="mx-auto max-w-7xl px-4 pb-32 pt-6 sm:px-6 lg:pb-10 lg:pt-10">
       <header className="mb-6 flex flex-col gap-1">
@@ -134,6 +151,16 @@ export default function Home() {
           </h1>
           <span className="ml-1 hidden rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 sm:inline">
             v1.0 · Common Paper
+          </span>
+          <span className="ml-auto flex items-center gap-2 text-xs text-slate-500">
+            {user}
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+            >
+              Log out
+            </button>
           </span>
         </div>
         <p className="text-sm text-slate-600">
