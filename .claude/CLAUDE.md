@@ -52,3 +52,19 @@ Backend available at http://localhost:8000
 - #87BAC3
 - #473472 - headings
 - #A3B087 - submit button
+
+## Implementation Status
+
+### PREL-4: V1 Foundation (complete)
+- **Backend**: FastAPI app in `backend/` with `uv` project, SQLite via raw `sqlite3` stdlib, bcrypt for password hashing.
+- **Auth**: `/api/auth/signup` and `/api/auth/signin` endpoints. Client-side auth gate via `localStorage.prelegal_user` — no JWT yet.
+- **Frontend**: Next.js static export (`output: 'export'`) served by FastAPI `StaticFiles(html=True)`. Login page at `/login/`.
+- **Docker**: Two-stage Dockerfile (node:20-alpine build, python:3.12-slim runtime). Start/stop scripts in `scripts/`.
+- **Tests**: 6 backend tests (pytest + httpx), 50 frontend tests (jest). All passing.
+
+### PREL-5: AI Chat (complete)
+- **Chat endpoint**: `POST /api/chat/` in `backend/routers/chat.py`. Receives conversation history + current fields, calls LLM via LiteLLM (OpenRouter + Cerebras, `openrouter/openai/gpt-oss-120b`), returns structured `{reply, patch}` using Pydantic model as `response_format`.
+- **Frontend**: Form panel replaced with `ChatPanel` (chat-panel.tsx) + `SignaturePanel` (signature-panel.tsx). Chat drives NDA field population; signatures remain manual. API wrapper in `chat-api.ts`.
+- **Live preview**: `NdaPreview` updates reactively as AI patches arrive — same component, no changes needed.
+- **Scripts**: Start scripts updated to pass `--env-file .env` for `OPENROUTER_API_KEY`.
+- **Tests**: 11 backend tests, 46 frontend tests. All passing.

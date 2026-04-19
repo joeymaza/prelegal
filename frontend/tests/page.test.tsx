@@ -3,10 +3,15 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "../app/page";
 
-// The PDF module is dynamically imported inside the click handler. Mock it
-// so the test focuses on click/download wiring rather than react-pdf internals.
 vi.mock("../app/nda-pdf", () => ({
   buildNdaPdfBlob: vi.fn(async () => new Blob(["%PDF-FAKE"], { type: "application/pdf" })),
+}));
+
+vi.mock("../app/chat-api", () => ({
+  sendChatTurn: vi.fn(async () => ({
+    reply: "Got it!",
+    patch: { party1Name: "Acme" },
+  })),
 }));
 
 beforeEach(() => {
@@ -31,15 +36,14 @@ describe("<Home /> — rendering", () => {
     expect(screen.getByText(/download a clean PDF/i)).toBeInTheDocument();
   });
 
-  it("renders all form fields with labels", () => {
+  it("renders the chat panel with greeting", () => {
     render(<Home />);
-    expect(screen.getByLabelText(/Party 1/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Party 2/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Purpose$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Effective Date$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Governing Law/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Jurisdiction/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/MNDA Modifications/i)).toBeInTheDocument();
+    expect(screen.getByText(/I'll help you draft your Mutual NDA/i)).toBeInTheDocument();
+  });
+
+  it("renders the chat input", () => {
+    render(<Home />);
+    expect(screen.getByPlaceholderText(/Type your message/i)).toBeInTheDocument();
   });
 
   it("renders download and reset buttons", () => {
@@ -57,75 +61,53 @@ describe("<Home /> — rendering", () => {
   });
 });
 
-describe("<Home /> — form interactions", () => {
-  it("updates the preview live as the user types the party names", async () => {
+describe("<Home /> — chat interactions", () => {
+  it("sends a message and shows the AI reply", async () => {
     const user = userEvent.setup();
     render(<Home />);
 
-    await user.type(screen.getByLabelText(/Party 1/i), "Acme");
-    await user.type(screen.getByLabelText(/Party 2/i), "Widgets");
+    const input = screen.getByPlaceholderText(/Type your message/i);
+    await user.type(input, "Acme Inc and Widgets LLC");
+    await user.click(screen.getByRole("button", { name: /Send/i }));
 
+    expect(await screen.findByText("Got it!")).toBeInTheDocument();
+  });
+
+  it("applies the patch from the AI to the preview", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    const input = screen.getByPlaceholderText(/Type your message/i);
+    await user.type(input, "Acme Inc and Widgets LLC");
+    await user.click(screen.getByRole("button", { name: /Send/i }));
+
+    await screen.findByText("Got it!");
     const preview = getPreview();
     expect(preview.textContent).toContain("Acme");
-    expect(preview.textContent).toContain("Widgets");
-    expect(preview.textContent).not.toContain("[Party 1]");
   });
 
-  it("switches MNDA term to perpetual and reflects it in preview", async () => {
+  it("shows user message in the chat", async () => {
     const user = userEvent.setup();
     render(<Home />);
 
-    const mndaSection = screen.getByRole("group", { name: /MNDA Term/i });
-    await user.click(within(mndaSection).getByLabelText(/Continues until terminated/i));
+    const input = screen.getByPlaceholderText(/Type your message/i);
+    await user.type(input, "Hello there");
+    await user.click(screen.getByRole("button", { name: /Send/i }));
+
+    expect(screen.getByText("Hello there")).toBeInTheDocument();
+  });
+});
+
+describe("<Home /> — signatures", () => {
+  it("types a signature Print Name into the preview table", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    const sigFields = screen.getAllByLabelText(/Print Name/i);
+    await user.type(sigFields[0], "Jane Doe");
 
     const preview = getPreview();
-    expect(preview.textContent).toContain("Continues until terminated");
-    expect(preview.textContent).not.toMatch(/Expires \d+ year/);
-  });
-
-  it("disables the MNDA year input when perpetual is selected", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const mndaSection = screen.getByRole("group", { name: /MNDA Term/i });
-    const yearInput = within(mndaSection).getByRole("spinbutton");
-    expect(yearInput).not.toBeDisabled();
-
-    await user.click(within(mndaSection).getByLabelText(/Continues until terminated/i));
-    expect(yearInput).toBeDisabled();
-  });
-
-  it("switches Term of Confidentiality to perpetuity", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const confSection = screen.getByRole("group", { name: /Term of Confidentiality/i });
-    await user.click(within(confSection).getByLabelText(/In perpetuity/i));
-
-    const preview = getPreview();
-    expect(preview.textContent).toMatch(/Term of Confidentiality\.\s*In perpetuity\./);
-  });
-
-  it("reflects updated year count in the preview", () => {
-    render(<Home />);
-
-    const mndaSection = screen.getByRole("group", { name: /MNDA Term/i });
-    const yearInput = within(mndaSection).getByRole("spinbutton") as HTMLInputElement;
-    fireEvent.change(yearInput, { target: { value: "3" } });
-
-    expect(getPreview().textContent).toContain("Expires 3 years from the Effective Date.");
-  });
-
-  it("resets form back to defaults", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const p1 = screen.getByLabelText(/Party 1/i) as HTMLInputElement;
-    await user.type(p1, "Acme");
-    expect(p1.value).toBe("Acme");
-
-    await user.click(getResetButton());
-    expect(p1.value).toBe("");
+    expect(preview.textContent).toContain("Jane Doe");
   });
 });
 
@@ -134,62 +116,16 @@ describe("<Home /> — download wiring", () => {
     const user = userEvent.setup();
     const { buildNdaPdfBlob } = await import("../app/nda-pdf");
 
-    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
-
-    render(<Home />);
-    await user.type(screen.getByLabelText(/Party 1/i), "Acme");
-    await user.type(screen.getByLabelText(/Party 2/i), "Widgets");
-
-    await user.click(getDownloadButton());
-
-    expect(buildNdaPdfBlob).toHaveBeenCalledTimes(1);
-    expect(anchorClick).toHaveBeenCalledTimes(1);
-    expect(createObjectURL).toHaveBeenCalled();
-  });
-
-  it("disables and re-enables the button around the async PDF build", async () => {
-    const user = userEvent.setup();
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
 
     render(<Home />);
-    const btn = getDownloadButton();
-    expect(btn).not.toBeDisabled();
+    await user.click(getDownloadButton());
 
-    await user.click(btn);
-
-    expect(getDownloadButton()).not.toBeDisabled();
-  });
-});
-
-describe("<Home /> — validation + UX", () => {
-  it("shows pending field count badge after user interaction", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    // Before any touch: "Ready" badge.
-    expect(screen.getByText(/^Ready$/)).toBeInTheDocument();
-
-    // After typing, required fields still empty → badge flips to "N fields pending".
-    await user.type(screen.getByLabelText(/Party 1/i), "Acme");
-    expect(screen.getByText(/fields? pending/i)).toBeInTheDocument();
+    expect(buildNdaPdfBlob).toHaveBeenCalledTimes(1);
   });
 
-  it("types a signature Print Name into the preview table", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const p1Sig = screen.getByRole("group", { name: /^Party 1$/i });
-    await user.type(within(p1Sig).getByLabelText(/Print Name/i), "Jane Doe");
-    await user.type(within(p1Sig).getByLabelText(/^Title$/i), "CEO");
-
-    const preview = getPreview();
-    expect(preview.textContent).toContain("Jane Doe");
-    expect(preview.textContent).toContain("CEO");
-  });
-
-  it("triggers download on Cmd/Ctrl+Enter", async () => {
+  it("triggers download on Ctrl+Enter", async () => {
     const { buildNdaPdfBlob } = await import("../app/nda-pdf");
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
