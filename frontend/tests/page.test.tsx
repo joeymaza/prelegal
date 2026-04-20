@@ -1,139 +1,80 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, waitFor } from "@testing-library/react";
 import Home from "../app/page";
 
-vi.mock("../app/nda-pdf", () => ({
-  buildNdaPdfBlob: vi.fn(async () => new Blob(["%PDF-FAKE"], { type: "application/pdf" })),
-}));
-
-vi.mock("../app/chat-api", () => ({
-  sendChatTurn: vi.fn(async () => ({
-    reply: "Got it!",
-    patch: { party1Name: "Acme" },
-  })),
+vi.mock("../app/lib/chat-api", () => ({
+  fetchDocuments: vi.fn(async () => [
+    {
+      doc_type: "nda",
+      name: "Mutual NDA (Standard Terms)",
+      description: "Common Paper Mutual NDA.",
+      party1_label: "Party 1",
+      party2_label: "Party 2",
+      field_names: ["party1Name"],
+      greeting: "Hi! Let's draft an NDA.",
+    },
+    {
+      doc_type: "csa",
+      name: "Cloud Service Agreement (CSA)",
+      description: "Common Paper CSA.",
+      party1_label: "Provider",
+      party2_label: "Customer",
+      field_names: ["Provider", "Customer"],
+      greeting: "Hi! Let's draft a CSA.",
+    },
+  ]),
+  fetchTemplate: vi.fn(async () => "## Template\n\nContent here."),
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.setItem("prelegal_user", "test@test.com");
-  if (!("createObjectURL" in URL)) {
-    (URL as unknown as { createObjectURL: (b: Blob) => string }).createObjectURL = () => "blob:mock";
-  }
-  if (!("revokeObjectURL" in URL)) {
-    (URL as unknown as { revokeObjectURL: (s: string) => void }).revokeObjectURL = () => {};
-  }
 });
 
-const getPreview = () => screen.getByTestId("nda-preview");
-const getDownloadButton = () => screen.getAllByRole("button", { name: /Download as PDF/i })[0];
-const getResetButton = () => screen.getAllByRole("button", { name: /^Reset$/i })[0];
-
-describe("<Home /> — rendering", () => {
-  it("renders the app title and description", () => {
+describe("<Home /> — document picker", () => {
+  it("renders the Prelegal heading", async () => {
     render(<Home />);
-    expect(screen.getByRole("heading", { level: 1, name: /Mutual NDA Creator/i })).toBeInTheDocument();
-    expect(screen.getByText(/download a clean PDF/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: /Prelegal/i })).toBeInTheDocument(),
+    );
   });
 
-  it("renders the chat panel with greeting", () => {
+  it("shows the document selection prompt", async () => {
     render(<Home />);
-    expect(screen.getByText(/I'll help you draft your Mutual NDA/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText(/Choose a document type/i)).toBeInTheDocument(),
+    );
   });
 
-  it("renders the chat input", () => {
+  it("renders document cards from the API", async () => {
     render(<Home />);
-    expect(screen.getByPlaceholderText(/Type your message/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("Mutual NDA (Standard Terms)")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("Cloud Service Agreement (CSA)")).toBeInTheDocument();
   });
 
-  it("renders download and reset buttons", () => {
+  it("renders Start drafting links with correct hrefs", async () => {
     render(<Home />);
-    expect(getDownloadButton()).toBeInTheDocument();
-    expect(getResetButton()).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getAllByRole("link", { name: /Start drafting/i }).length).toBeGreaterThan(0),
+    );
+    const links = screen.getAllByRole("link", { name: /Start drafting/i });
+    expect(links[0]).toHaveAttribute("href", "/editor/?doc=nda");
+    expect(links[1]).toHaveAttribute("href", "/editor/?doc=csa");
   });
 
-  it("renders the preview panel with default placeholders", () => {
+  it("shows the logged-in user email", async () => {
     render(<Home />);
-    expect(screen.getByRole("heading", { name: /^Preview$/i })).toBeInTheDocument();
-    const preview = getPreview();
-    expect(preview.textContent).toContain("[Party 1]");
-    expect(preview.textContent).toContain("[Party 2]");
-  });
-});
-
-describe("<Home /> — chat interactions", () => {
-  it("sends a message and shows the AI reply", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const input = screen.getByPlaceholderText(/Type your message/i);
-    await user.type(input, "Acme Inc and Widgets LLC");
-    await user.click(screen.getByRole("button", { name: /Send/i }));
-
-    expect(await screen.findByText("Got it!")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("test@test.com")).toBeInTheDocument(),
+    );
   });
 
-  it("applies the patch from the AI to the preview", async () => {
-    const user = userEvent.setup();
+  it("shows log out button", async () => {
     render(<Home />);
-
-    const input = screen.getByPlaceholderText(/Type your message/i);
-    await user.type(input, "Acme Inc and Widgets LLC");
-    await user.click(screen.getByRole("button", { name: /Send/i }));
-
-    await screen.findByText("Got it!");
-    const preview = getPreview();
-    expect(preview.textContent).toContain("Acme");
-  });
-
-  it("shows user message in the chat", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const input = screen.getByPlaceholderText(/Type your message/i);
-    await user.type(input, "Hello there");
-    await user.click(screen.getByRole("button", { name: /Send/i }));
-
-    expect(screen.getByText("Hello there")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Log out/i })).toBeInTheDocument(),
+    );
   });
 });
-
-describe("<Home /> — signatures", () => {
-  it("types a signature Print Name into the preview table", async () => {
-    const user = userEvent.setup();
-    render(<Home />);
-
-    const sigFields = screen.getAllByLabelText(/Print Name/i);
-    await user.type(sigFields[0], "Jane Doe");
-
-    const preview = getPreview();
-    expect(preview.textContent).toContain("Jane Doe");
-  });
-});
-
-describe("<Home /> — download wiring", () => {
-  it("calls buildNdaPdfBlob and triggers an anchor download", async () => {
-    const user = userEvent.setup();
-    const { buildNdaPdfBlob } = await import("../app/nda-pdf");
-
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
-
-    render(<Home />);
-    await user.click(getDownloadButton());
-
-    expect(buildNdaPdfBlob).toHaveBeenCalledTimes(1);
-  });
-
-  it("triggers download on Ctrl+Enter", async () => {
-    const { buildNdaPdfBlob } = await import("../app/nda-pdf");
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
-    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
-
-    render(<Home />);
-    fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
-
-    await screen.findByText(/Downloaded /);
-    expect(buildNdaPdfBlob).toHaveBeenCalled();
-  });
-}, { timeout: 10000 });
