@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from .db import init_db
 from .routers.auth import router as auth_router
 from .routers.chat import router as chat_router
+from .routers.documents import router as documents_router
 from .routers.health import router as health_router
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "frontend" / "out"
@@ -26,6 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router, prefix="/api/auth")
 app.include_router(chat_router, prefix="/api/chat")
+app.include_router(documents_router, prefix="/api/documents")
 app.include_router(health_router, prefix="/api")
 
 if STATIC_DIR.exists():

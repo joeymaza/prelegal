@@ -82,7 +82,7 @@ def test_chat_passes_current_fields(mock_completion, client):
 
 def test_chat_unsupported_doc_type(client):
     resp = client.post("/api/chat/", json={
-        "document_type": "csa",
+        "document_type": "unknown-garbage",
         "messages": [{"role": "user", "content": "hello"}],
     })
     assert resp.status_code == 400

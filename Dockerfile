@@ -13,6 +13,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY backend/ ./backend/
 RUN cd backend && uv sync --frozen
 COPY --from=frontend-build /app/frontend/out ./frontend/out/
+COPY catalog.json ./
+COPY templates/ ./templates/
 RUN mkdir -p /app/data
 ENV PYTHONPATH=/app
 EXPOSE 8000
