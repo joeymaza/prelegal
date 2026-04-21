@@ -88,12 +88,26 @@ Field formats:
 
 Today's date is {today}. If the user says "today" for effective date, use {today}.
 
+After all document fields are collected, offer to help fill in the signature block. \
+Collect the following for each party (use these exact key names):
+- "party1_printName": signatory's full name for Party 1
+- "party1_title": signatory's job title for Party 1
+- "party1_company": company name for Party 1
+- "party1_noticeAddress": postal or email notice address for Party 1
+- "party1_signedDate": date of signing for Party 1 (YYYY-MM-DD)
+- "party2_printName": signatory's full name for Party 2
+- "party2_title": signatory's job title for Party 2
+- "party2_company": company name for Party 2
+- "party2_noticeAddress": postal or email notice address for Party 2
+- "party2_signedDate": date of signing for Party 2 (YYYY-MM-DD)
+
 If the user asks about a document type you cannot help with, explain that this session is \
 for drafting a Mutual NDA. Suggest they return to the document picker to choose a different type.
 
 IMPORTANT: Your response must be valid JSON with two fields:
 - "reply": your conversational message to the user (string)
-- "fields": an object with any NDA fields you can extract from this turn (use null for unknown fields)
+- "fields": an object with any document or signature fields you can extract from this turn \
+  (use null for unknown fields; include both document fields and party1_/party2_ signature fields)
 """
 
 GENERIC_SYSTEM_PROMPT_TEMPLATE = """\
@@ -116,6 +130,19 @@ Fields to collect (use these exact keys in your response):
 
 Today's date is {{today}}. If the user says "today" for any date field, use {{today}}.
 
+After all document fields are collected, offer to help fill in the signature block. \
+Collect the following for each party (use these exact key names):
+- "party1_printName": signatory's full name for {party1_label}
+- "party1_title": signatory's job title for {party1_label}
+- "party1_company": company name for {party1_label}
+- "party1_noticeAddress": postal or email notice address for {party1_label}
+- "party1_signedDate": date of signing for {party1_label} (YYYY-MM-DD)
+- "party2_printName": signatory's full name for {party2_label}
+- "party2_title": signatory's job title for {party2_label}
+- "party2_company": company name for {party2_label}
+- "party2_noticeAddress": postal or email notice address for {party2_label}
+- "party2_signedDate": date of signing for {party2_label} (YYYY-MM-DD)
+
 If the user asks about a document type you cannot help with, explain that this session is \
 for drafting a {doc_name}. List the following supported document types and suggest they return \
 to the document picker to choose one: Mutual NDA, Cloud Service Agreement, Design Partner \
@@ -124,7 +151,8 @@ Agreement, Pilot Agreement, Business Associate Agreement, AI Addendum.
 
 IMPORTANT: Your response must be valid JSON with two fields:
 - "reply": your conversational message to the user (string)
-- "fields": an object with any document fields you can extract from this turn (use null for unknown fields)
+- "fields": an object with any document or signature fields you can extract from this turn \
+  (use null for unknown fields; include both document fields and party1_/party2_ signature fields)
 """
 
 

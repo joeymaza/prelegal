@@ -6,7 +6,7 @@ This is a Saas product to allow users to draft legal documents based on template
 
 @catalog.json
 
-Before we start: the initial implementation is a frontend-only prototype that only supports the Mutual NDA document with no AI chat.
+The current implementation supports the Mutual NDA document with AI chat-driven field population.
 
 ## Development Process
 

@@ -25,6 +25,27 @@ export function ChatPanel({ docType, fields, greeting, onPatch }: ChatPanelProps
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth" });
   }, [messages]);
 
+  // Restore focus to textarea when AI finishes responding
+  useEffect(() => {
+    if (!sending) {
+      inputRef.current?.focus();
+    }
+  }, [sending]);
+
+  // Global keydown: if user types anywhere and textarea isn't focused, redirect there
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (
+        document.activeElement === inputRef.current ||
+        e.metaKey || e.ctrlKey || e.altKey ||
+        e.key.length !== 1
+      ) return;
+      inputRef.current?.focus();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || sending) return;
@@ -52,7 +73,6 @@ export function ChatPanel({ docType, fields, greeting, onPatch }: ChatPanelProps
       ]);
     } finally {
       setSending(false);
-      inputRef.current?.focus();
     }
   }, [input, sending, messages, onPatch, docType]);
 

@@ -17,7 +17,26 @@
       "Bash(gh pr *)",
       "Bash(git -C C:/Users/joema/ai_projects/ai_coder/prelegal remote -v)",
       "mcp__github__list_pull_requests",
-      "mcp__github__create_pull_request"
+      "mcp__github__create_pull_request",
+      "Bash(uv sync *)",
+      "Bash(uv add *)",
+      "Bash(uv run *)",
+      "Bash(uv remove *)",
+      "Bash(docker build *)",
+      "Bash(docker rm *)",
+      "Bash(docker run *)",
+      "Bash(curl -s http://localhost:8000/api/health)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -s -X POST http://localhost:8000/api/chat/ -H \"Content-Type: application/json\" -d '{\"messages\":[{\"role\":\"user\",\"content\":\"The two parties are Acme Corp and Widgets LLC\"}]}')",
+      "Bash(npx tsc *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(bash *)",
+      "Bash(curl -s http://localhost:8000)",
+      "Bash(curl -s http://localhost:8000/api/documents/)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'{len\\(d\\)} docs loaded'\\)\")"
     ]
   }
 }
