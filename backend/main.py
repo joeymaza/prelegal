@@ -14,6 +14,7 @@ from .routers.auth import router as auth_router
 from .routers.chat import router as chat_router
 from .routers.documents import router as documents_router
 from .routers.health import router as health_router
+from .routers.history import router as history_router
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "frontend" / "out"
 
@@ -29,6 +30,7 @@ app.include_router(auth_router, prefix="/api/auth")
 app.include_router(chat_router, prefix="/api/chat")
 app.include_router(documents_router, prefix="/api/documents")
 app.include_router(health_router, prefix="/api")
+app.include_router(history_router, prefix="/api/history")
 
 if STATIC_DIR.exists():
     app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")

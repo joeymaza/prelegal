@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const inputCls =
-  "mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 placeholder:text-slate-400";
+  "mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus:outline-none focus:ring-2 placeholder:text-slate-400";
 
 type Mode = "signin" | "signup";
 
@@ -41,10 +41,10 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center px-4" style={{ backgroundColor: "#D6F4ED" }}>
       <div className="paper w-full max-w-sm rounded-xl p-6">
         <div className="mb-6 text-center">
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight" style={{ color: "#473472" }}>
             Prelegal
           </h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -90,7 +90,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+            className="w-full rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
+            style={{ backgroundColor: "#A3B087" }}
           >
             {loading ? "Please wait..." : mode === "signin" ? "Sign in" : "Sign up"}
           </button>
@@ -103,7 +104,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setMode("signup"); setError(""); }}
-                className="text-indigo-600 underline underline-offset-2"
+                className="underline underline-offset-2" style={{ color: "#53629E" }}
               >
                 Sign up
               </button>
@@ -114,7 +115,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setMode("signin"); setError(""); }}
-                className="text-indigo-600 underline underline-offset-2"
+                className="underline underline-offset-2" style={{ color: "#53629E" }}
               >
                 Sign in
               </button>

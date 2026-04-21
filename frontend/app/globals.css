@@ -18,9 +18,9 @@ body {
 
 .app-bg {
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.08), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgba(16, 185, 129, 0.06), transparent 55%),
-    #f8fafc;
+    radial-gradient(1200px 600px at 10% -10%, rgba(83, 98, 158, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(135, 186, 195, 0.10), transparent 55%),
+    #D6F4ED;
 }
 
 .paper {

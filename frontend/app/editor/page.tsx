@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { DocMeta, DocState, Signature } from "../lib/doc-types";
 import { makeDefaultDocState, docFilename } from "../lib/doc-types";
-import { fetchDocuments, fetchTemplate } from "../lib/chat-api";
+import { fetchDocuments, fetchTemplate, saveDocument, loadSavedDocument } from "../lib/chat-api";
 import { ChatPanel } from "../components/chat-panel";
 import { DocPreview } from "../components/doc-preview";
 import { SignatureBlock } from "../components/signature-block";
@@ -44,6 +44,7 @@ function EditorInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [savedDocId, setSavedDocId] = useState<number | null>(null);
   const templateRef = useRef("");
 
   useEffect(() => {
@@ -52,8 +53,9 @@ function EditorInner() {
       window.location.href = "/login/";
       return;
     }
+    const savedId = params.get("saved_id");
     Promise.all([fetchDocuments(), fetchTemplate(docSlug)])
-      .then(([docs, markdown]: [DocMeta[], string]) => {
+      .then(async ([docs, markdown]: [DocMeta[], string]) => {
         const meta = docs.find((d) => d.doc_type === docSlug);
         if (!meta) {
           setError(
@@ -62,13 +64,30 @@ function EditorInner() {
           return;
         }
         setDocMeta(meta);
-        setDocState(makeDefaultDocState(meta));
         setTemplateMarkdown(markdown);
         templateRef.current = markdown;
+
+        if (savedId) {
+          try {
+            const saved = await loadSavedDocument(parseInt(savedId), user);
+            const state = makeDefaultDocState(meta);
+            setDocState({
+              ...state,
+              fields: saved.fields,
+              party1Signature: { ...state.party1Signature, ...saved.party1_signature } as Signature,
+              party2Signature: { ...state.party2Signature, ...saved.party2_signature } as Signature,
+            });
+            setSavedDocId(parseInt(savedId));
+          } catch {
+            setDocState(makeDefaultDocState(meta));
+          }
+        } else {
+          setDocState(makeDefaultDocState(meta));
+        }
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [docSlug]);
+  }, [docSlug, params]);
 
   const handlePatch = useCallback((patch: Partial<Record<string, string>>) => {
     const docFields: Record<string, string> = {};
@@ -134,10 +153,29 @@ function EditorInner() {
       a.download = docFilename(docState, "pdf");
       a.click();
       URL.revokeObjectURL(url);
+
+      // Auto-save on download
+      const user = localStorage.getItem("prelegal_user");
+      if (user) {
+        try {
+          const result = await saveDocument({
+            user_email: user,
+            doc_type: docState.docType,
+            doc_name: docState.docName,
+            fields: docState.fields,
+            party1_signature: docState.party1Signature as Record<string, string>,
+            party2_signature: docState.party2Signature as Record<string, string>,
+            doc_id: savedDocId ?? undefined,
+          });
+          setSavedDocId(result.id);
+        } catch {
+          // save failure is non-fatal
+        }
+      }
     } finally {
       setDownloading(false);
     }
-  }, [docState, docMeta, docSlug, downloading]);
+  }, [docState, docMeta, docSlug, downloading, savedDocId]);
 
   if (loading) {
     return (
@@ -224,6 +262,11 @@ function EditorInner() {
           )}
         </button>
       </header>
+
+      {/* Disclaimer */}
+      <div className="flex-shrink-0 border-b px-4 py-2 text-center text-xs" style={{ backgroundColor: "#fffbeb", borderColor: "#fde68a", color: "#92400e" }}>
+        These documents are AI-generated drafts for reference only. They are not legal advice and should be reviewed by a qualified attorney before use.
+      </div>
 
       <div className="grid flex-1 grid-cols-[380px_1fr] overflow-hidden">
         {/* Left panel: chat + signatures */}

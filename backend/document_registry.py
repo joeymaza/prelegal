@@ -68,7 +68,8 @@ confidentiality term, governing law state, jurisdiction, and any modifications.
 3. Ask one or two questions at a time. Be conversational but concise.
 4. When the user provides information, extract it into the structured fields.
 5. Only populate fields you have clear information for. Leave others as null.
-6. Once all required fields are filled, summarize what you have and ask if anything needs changes.
+6. If a user's answer is ambiguous or incomplete, always ask a follow-up question to clarify before moving on.
+7. Once all required fields are filled, summarize what you have and ask if anything needs changes.
 
 Required fields: party1Name, party2Name, effectiveDate, governingLawState, jurisdiction.
 Optional fields: purpose, mndaTermMode, mndaTermYears, confTermMode, confTermYears, modifications.
@@ -119,7 +120,8 @@ Your job:
 3. Be conversational but concise.
 4. When the user provides information, extract it into the structured fields.
 5. Only populate fields you have clear information for. Leave others as null.
-6. Once all key fields are filled, summarize what you have and ask if anything needs changes.
+6. If a user's answer is ambiguous or incomplete, always ask a follow-up question to clarify before moving on.
+7. Once all key fields are filled, summarize what you have and ask if anything needs changes.
 
 The two parties in this agreement are called "{party1_label}" and "{party2_label}".
 

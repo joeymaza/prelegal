@@ -8,6 +8,13 @@ export type Signature = {
 
 export type DocFields = Record<string, string>;
 
+export type SavedDocSummary = {
+  id: number;
+  doc_type: string;
+  doc_name: string;
+  updated_at: string;
+};
+
 export type DocMeta = {
   doc_type: string;
   name: string;

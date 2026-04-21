@@ -25,10 +25,13 @@ export function ChatPanel({ docType, fields, greeting, onPatch }: ChatPanelProps
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth" });
   }, [messages]);
 
-  // Restore focus to textarea when AI finishes responding
+  // Restore focus to textarea when AI finishes responding.
+  // requestAnimationFrame ensures the textarea is re-enabled before focus() is called.
   useEffect(() => {
     if (!sending) {
-      inputRef.current?.focus();
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     }
   }, [sending]);
 

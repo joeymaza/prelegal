@@ -23,6 +23,7 @@ vi.mock("../app/lib/chat-api", () => ({
       greeting: "Hi! Let's draft a CSA.",
     },
   ]),
+  listSavedDocuments: vi.fn(async () => []),
   fetchTemplate: vi.fn(async () => "## Template\n\nContent here."),
 }));
 
