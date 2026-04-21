@@ -8,7 +8,6 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from litellm import completion
 from litellm.exceptions import APIError
-from pydantic import ValidationError as PydanticValidationError
 from pydantic import BaseModel
 
 from ..document_registry import get_doc_config
@@ -17,13 +16,6 @@ router = APIRouter()
 
 MODEL = "openrouter/openai/gpt-oss-120b"
 EXTRA_BODY = {"provider": {"order": ["cerebras"]}}
-
-
-class ChatResponseSchema(BaseModel):
-    """Schema enforced on the LLM response."""
-
-    reply: str
-    fields: dict[str, str | None] = {}
 
 
 class ChatMessage(BaseModel):
@@ -71,19 +63,24 @@ def chat(body: ChatRequest):
         response = completion(
             model=MODEL,
             messages=messages,
-            response_format=ChatResponseSchema,
-            reasoning_effort="low",
+            response_format={"type": "json_object"},
+            max_tokens=2048,
             extra_body=EXTRA_BODY,
             api_key=api_key,
         )
         raw = response.choices[0].message.content
-        parsed = ChatResponseSchema.model_validate_json(raw)
-    except PydanticValidationError:
-        raise HTTPException(status_code=502, detail="LLM returned malformed response")
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="LLM returned malformed JSON")
     except APIError as e:
         raise HTTPException(status_code=502, detail=f"LLM provider error: {e.message}")
 
-    # Filter out None values from the patch
-    patch = {k: v for k, v in parsed.fields.items() if v is not None}
+    reply = data.get("reply") or ""
+    doc_fields = data.get("doc_fields", {})
+    if not isinstance(doc_fields, dict):
+        doc_fields = {}
 
-    return ChatResponse(reply=parsed.reply, patch=patch)
+    # Filter out None/empty values from the patch
+    patch = {k: v for k, v in doc_fields.items() if v is not None and v != ""}
+
+    return ChatResponse(reply=reply, patch=patch)

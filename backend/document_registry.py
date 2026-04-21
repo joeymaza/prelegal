@@ -105,9 +105,9 @@ Collect the following for each party (use these exact key names):
 If the user asks about a document type you cannot help with, explain that this session is \
 for drafting a Mutual NDA. Suggest they return to the document picker to choose a different type.
 
-IMPORTANT: Your response must be valid JSON with two fields:
-- "reply": your conversational message to the user (string)
-- "fields": an object with any document or signature fields you can extract from this turn \
+IMPORTANT: Your response must be valid JSON with exactly two keys:
+- "reply": your conversational message to the user (string) — this is what the user will see
+- "doc_fields": an object with any document or signature fields you can extract from this turn \
   (use null for unknown fields; include both document fields and party1_/party2_ signature fields)
 """
 
@@ -151,9 +151,9 @@ to the document picker to choose one: Mutual NDA, Cloud Service Agreement, Desig
 Agreement, SLA, Professional Services Agreement, DPA, Partnership Agreement, Software License \
 Agreement, Pilot Agreement, Business Associate Agreement, AI Addendum.
 
-IMPORTANT: Your response must be valid JSON with two fields:
-- "reply": your conversational message to the user (string)
-- "fields": an object with any document or signature fields you can extract from this turn \
+IMPORTANT: Your response must be valid JSON with exactly two keys:
+- "reply": your conversational message to the user (string) — this is what the user will see
+- "doc_fields": an object with any document or signature fields you can extract from this turn \
   (use null for unknown fields; include both document fields and party1_/party2_ signature fields)
 """
 

@@ -31,7 +31,7 @@ def _mock_llm_response(reply: str, fields: dict):
     mock_resp.choices = [MagicMock()]
     mock_resp.choices[0].message.content = json.dumps({
         "reply": reply,
-        "fields": fields,
+        "doc_fields": fields,
     })
     return mock_resp
 
